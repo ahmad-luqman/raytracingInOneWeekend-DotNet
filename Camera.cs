@@ -1,35 +1,38 @@
+using System;
 namespace RayTracingInOneWeekend;
 
 class Camera
 {
-    private readonly Vector3d _origin;
     private readonly Vector3d _lowerLeftCorner;
-    private readonly float _viewportHeight;
-    private readonly float _aspectRatio;
-    private readonly float _focalLength;
+    private readonly Vector3d _horizontal;
+    private readonly Vector3d _vertical;
+    private readonly Vector3d _origin;
+    private readonly Vector3d _u;
+    private readonly Vector3d _v;
+    private readonly double _lensRadius;
+    private readonly Random _rng = new();
+    private static readonly Vector3d Size = new(1, 1, 0);
 
-    public Camera(
-        Vector3d origin,
-        float viewportHeight,
-        float aspectRatio,
-        float focalLength)
+    // verticalFieldOfViewDegrees is top to bottom in degrees.
+    public Camera(Vector3d lookFrom, Vector3d lookAt, Vector3d viewUp, float verticalFieldOfViewDegrees, float aspectRatio, float aperture, float focusDistance)
     {
-        _origin = origin;
-        _viewportHeight = viewportHeight;
-        _aspectRatio = aspectRatio;
-        _focalLength = focalLength;
+        _lensRadius = aperture / 2;
+        var theta = verticalFieldOfViewDegrees * Math.PI / 180;
+        var halfHeight = Convert.ToSingle(Math.Tan(theta / 2));
+        var halfWidth = aspectRatio * halfHeight;
 
-        var viewportWidth = _aspectRatio * _viewportHeight;
-        var horizontal = new Vector3d(viewportWidth, 0, 0);
-        var vertical = new Vector3d(0, _viewportHeight, 0);
+        _origin = lookFrom;
+        Vector3d w = new Vector3d(lookFrom - lookAt).Normalize();
+        _u = new Vector3d(Vector3d.Cross(viewUp, w)).Normalize();
+        _v = Vector3d.Cross(w, _u);
 
-        _lowerLeftCorner = _origin - horizontal / 2 - vertical / 2 - new Vector3d(0, 0, _focalLength);
+        _lowerLeftCorner = _origin - halfWidth * focusDistance * _u - halfHeight * focusDistance * _v - focusDistance * w;
+        _horizontal = 2 * halfWidth * focusDistance * _u;
+        _vertical = 2 * halfHeight * focusDistance * _v;
     }
 
-    public Ray GetRay(float u, float v)
+    public Ray GetRay(float s, float t)
     {
-        return new Ray(
-            _origin,
-            _lowerLeftCorner + u * new Vector3d(_aspectRatio, 0, 0) + v * new Vector3d(0, 1, 0) - _origin);
+        return new Ray(_origin, _lowerLeftCorner + s * _horizontal + t * _vertical - _origin);
     }
 }

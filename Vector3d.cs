@@ -207,5 +207,31 @@ namespace RayTracingInOneWeekend
             return false;
         }
 
+        public static Vector3d Random(Random rng)
+        {
+            return new Vector3d(
+                (float)rng.NextDouble(),
+                (float)rng.NextDouble(),
+                (float)rng.NextDouble());
+        }
+
+        public static Vector3d Random(Random rng, float min, float max)
+        {
+            return new Vector3d(
+                (float)rng.NextDouble() * (max - min) + min,
+                (float)rng.NextDouble() * (max - min) + min,
+                (float)rng.NextDouble() * (max - min) + min);
+        }
+
+        public static Vector3d RandomInUnitSphere(Random rng)
+        {
+            while (true)
+            {
+                Vector3d p = Random(rng, -1, 1);
+                if (p.Sqr_Magnitude >= 1)
+                    continue;
+                return p;
+            }
+        }
     }
 }
