@@ -22,17 +22,19 @@ class Camera
         var halfWidth = aspectRatio * halfHeight;
 
         _origin = lookFrom;
-        Vector3d w = new Vector3d(lookFrom - lookAt).Normalize();
-        _u = new Vector3d(Vector3d.Cross(viewUp, w)).Normalize();
-        _v = Vector3d.Cross(w, _u);
+        Vector3d _w = new Vector3d(lookFrom - lookAt).Normalize();
+        _u = new Vector3d(Vector3d.Cross(viewUp, _w)).Normalize();
+        _v = Vector3d.Cross(_w, _u);
 
-        _lowerLeftCorner = _origin - halfWidth * focusDistance * _u - halfHeight * focusDistance * _v - focusDistance * w;
+        _lowerLeftCorner = _origin - halfWidth * focusDistance * _u - halfHeight * focusDistance * _v - focusDistance * _w;
         _horizontal = 2 * halfWidth * focusDistance * _u;
         _vertical = 2 * halfHeight * focusDistance * _v;
     }
 
     public Ray GetRay(float s, float t)
     {
-        return new Ray(_origin, _lowerLeftCorner + s * _horizontal + t * _vertical - _origin);
+        var rayDirection = Convert.ToSingle(_lensRadius) * Vector3d.Random(RandomGenerator.Rng);
+        var offset = _u * rayDirection.x + _v * rayDirection.y;
+        return new Ray(_origin + offset, _lowerLeftCorner + s * _horizontal + t * _vertical - _origin - offset);
     }
 }

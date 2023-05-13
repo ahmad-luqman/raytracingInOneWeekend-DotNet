@@ -6,11 +6,19 @@ class Sphere : Hitable
 {
     private readonly Vector3d _center;
     private readonly float _radius;
+    private Material? _material;
 
     public Sphere(Vector3d center, float radius)
     {
         _center = center;
         _radius = radius;
+    }
+
+    public Sphere(Vector3d center, float radius, Material material)
+    {
+        _center = center;
+        _radius = radius;
+        _material = material;
     }
 
     public override bool Hit(Ray r, float tMin, float tMax, ref HitRecord record)
@@ -23,6 +31,8 @@ class Sphere : Hitable
 
         if (discriminant > 0)
         {
+            if (_material != null)
+                record.Material = _material;
             var temp = Convert.ToSingle(-b - Math.Sqrt(b * b - a * c)) / a;
             if (temp < tMax && temp > tMin)
             {

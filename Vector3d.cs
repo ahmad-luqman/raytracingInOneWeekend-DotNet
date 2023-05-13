@@ -161,6 +161,17 @@ namespace RayTracingInOneWeekend
             return a.x * x + a.y * y + a.z * z;
         }
 
+        public bool NearZero()
+        {
+            const float s = 1e-8f;
+            return (Math.Abs(x) < s) && (Math.Abs(y) < s) && (Math.Abs(z) < s);
+        }
+
+        public static Vector3d Reflect(Vector3d v, Vector3d n)
+        {
+            return v - 2 * Dot(v, n) * n;
+        }
+
         public static float Dot(Vector3d a, Vector3d b)
         {
             return a.x * b.x + a.y * b.y + a.z * b.z;

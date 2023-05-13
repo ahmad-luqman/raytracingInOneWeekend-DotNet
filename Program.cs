@@ -4,7 +4,7 @@ namespace RayTracingInOneWeekend
 {
     internal class Program
     {
-        static Random _rng = new();
+        static Random _rng = RandomGenerator.Rng;
         static float Clamp(float x, float min, float max)
         {
             if (x < min) return min;
@@ -24,8 +24,13 @@ namespace RayTracingInOneWeekend
 
             if (world.Hit(r, 0.001f, float.MaxValue, ref rec))
             {
-                Vector3d target = rec.PointOfIntersection + Vector3d.RandomInHemisphere(_rng, rec.Normal);
-                return 0.5f * GetColor(new Ray(rec.PointOfIntersection, target - rec.PointOfIntersection), world, depth - 1);
+                Ray scattered = new Ray();
+                Vector3d attenuation = new Vector3d();
+                if (rec.Material.Scatter(r, rec, ref attenuation, ref scattered))
+                {
+                    return attenuation * GetColor(scattered, world, depth - 1);
+                }
+                return new Vector3d(0, 0, 0);
             }
 
             Vector3d unit_direction = r.Direction.Normalize();
@@ -60,10 +65,17 @@ namespace RayTracingInOneWeekend
             int max_depth = 50;
 
             // World
+            var material_ground = new Lambertian(new Vector3d(0.8f, 0.8f, 0.0f));
+            var material_center = new Lambertian(new Vector3d(0.1f, 0.2f, 0.5f));
+            var material_left = new Dielectric(1.5f);
+            var material_right = new Metal(new Vector3d(0.8f, 0.6f, 0.2f), 0.0f);
 
             HitableList world = new HitableList(new Hitable[] {
-                new Sphere(new Vector3d(0, 0, -1), 0.5f),
-                new Sphere(new Vector3d(0, -100.5f, -1), 100)
+                new Sphere(new Vector3d( 0.0f, -100.5f, -1.0f), 100.0f, material_ground),
+                new Sphere(new Vector3d( 0.0f,    0.0f, -1.0f),   0.5f, material_center),
+                new Sphere(new Vector3d(-1.0f,    0.0f, -1.0f),   0.5f, material_left),
+                new Sphere(new Vector3d(-1.0f,    0.0f, -1.0f), -0.45f, material_left),
+                new Sphere(new Vector3d( 1.0f,    0.0f, -1.0f),   0.5f, material_right)
             });
 
             // Camera
@@ -72,7 +84,7 @@ namespace RayTracingInOneWeekend
             var vup = new Vector3d(0, 1, 0);
             var dist_to_focus = (lookFrom - lookAt).Magnitude;
 
-            var camera = new Camera(lookFrom, lookAt, vup, 20, Convert.ToSingle(aspect_ratio), 0.1f, dist_to_focus);
+            var camera = new Camera(lookFrom, lookAt, vup, 20, Convert.ToSingle(aspect_ratio), 2.0f, dist_to_focus);
 
             // Render
 

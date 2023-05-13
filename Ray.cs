@@ -2,7 +2,7 @@ namespace RayTracingInOneWeekend
 {
     class Ray
     {
-        //public Ray() { }
+        public Ray() { origin = new Vector3d(); direction = new Vector3d(); }
         public Ray(Vector3d ori, Vector3d dir) { origin = ori; direction = dir; }
         public Ray(Ray r) { origin = r.Origin; direction = r.Direction; }
         public Vector3d point_at_parameter(float t) { return origin + direction * t; }
