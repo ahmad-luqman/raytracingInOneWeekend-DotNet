@@ -22,9 +22,9 @@ namespace RayTracingInOneWeekend
                 return new Vector3d(0, 0, 0);
             }
 
-            if (world.Hit(r, 0, float.MaxValue, ref rec))
+            if (world.Hit(r, 0.001f, float.MaxValue, ref rec))
             {
-                Vector3d target = rec.PointOfIntersection + rec.Normal + Vector3d.RandomInUnitSphere(_rng);
+                Vector3d target = rec.PointOfIntersection + Vector3d.RandomInHemisphere(_rng, rec.Normal);
                 return 0.5f * GetColor(new Ray(rec.PointOfIntersection, target - rec.PointOfIntersection), world, depth - 1);
             }
 
@@ -41,9 +41,9 @@ namespace RayTracingInOneWeekend
 
             // Divide the color by the number of samples.
             float scale = 1.0f / samples_per_pixel;
-            r *= scale;
-            g *= scale;
-            b *= scale;
+            r = (float)Math.Sqrt(scale * r);
+            g = (float)Math.Sqrt(scale * g);
+            b = (float)Math.Sqrt(scale * b);
 
             // Write the clamped [0,255] value of each color component.
             Console.WriteLine($"{(int)(256 * Clamp(r, 0.0f, 0.999f))} {(int)(256 * Clamp(g, 0.0f, 0.999f))} {(int)(256 * Clamp(b, 0.0f, 0.999f))}");

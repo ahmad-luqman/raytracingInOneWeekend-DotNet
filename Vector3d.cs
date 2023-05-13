@@ -233,5 +233,19 @@ namespace RayTracingInOneWeekend
                 return p;
             }
         }
+
+        public static Vector3d RandomUnitVector(Random rng)
+        {
+            return RandomInUnitSphere(rng).Normalize();
+        }
+
+        public static Vector3d RandomInHemisphere(Random rng, Vector3d normal)
+        {
+            Vector3d in_unit_sphere = RandomInUnitSphere(rng);
+            if (Dot(in_unit_sphere, normal) > 0.0f)
+                return in_unit_sphere;
+            else
+                return -1 * in_unit_sphere;
+        }
     }
 }
