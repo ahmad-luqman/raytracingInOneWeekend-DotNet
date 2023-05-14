@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace RayTracingInOneWeekend
 {
@@ -54,37 +55,81 @@ namespace RayTracingInOneWeekend
             Console.WriteLine($"{(int)(256 * Clamp(r, 0.0f, 0.999f))} {(int)(256 * Clamp(g, 0.0f, 0.999f))} {(int)(256 * Clamp(b, 0.0f, 0.999f))}");
         }
 
+        static HitableList RandomScene()
+        {
+            var world = new List<Hitable>();
+
+            var ground_material = new Lambertian(new Vector3d(0.5f, 0.5f, 0.5f));
+            world.Add(new Sphere(new Vector3d(0, -1000, 0), 1000, ground_material));
+
+            for (int a = -11; a < 11; a++)
+            {
+                for (int b = -11; b < 11; b++)
+                {
+                    float choose_mat = (float)_rng.NextDouble();
+                    Vector3d center = new Vector3d(a + 0.9f * (float)_rng.NextDouble(), 0.2f, b + 0.9f * (float)_rng.NextDouble());
+
+                    if ((center - new Vector3d(4, 0.2f, 0)).Magnitude > 0.9f)
+                    {
+                        Material sphere_material;
+
+                        if (choose_mat < 0.8f)
+                        {
+                            // diffuse
+                            var albedo = Vector3d.Random(RandomGenerator.Rng) * Vector3d.Random(RandomGenerator.Rng);
+                            sphere_material = new Lambertian(albedo);
+                            world.Add(new Sphere(center, 0.2f, sphere_material));
+                        }
+                        else if (choose_mat < 0.95f)
+                        {
+                            // metal
+                            var albedo = Vector3d.Random(RandomGenerator.Rng, 0.5f, 1);
+                            var fuzz = (float)_rng.NextDouble() * 0.5f;
+                            sphere_material = new Metal(albedo, fuzz);
+                            world.Add(new Sphere(center, 0.2f, sphere_material));
+                        }
+                        else
+                        {
+                            // glass
+                            sphere_material = new Dielectric(1.5f);
+                            world.Add(new Sphere(center, 0.2f, sphere_material));
+                        }
+                    }
+                }
+            }
+
+            var material1 = new Dielectric(1.5f);
+            world.Add(new Sphere(new Vector3d(0, 1, 0), 1.0f, material1));
+
+            var material2 = new Lambertian(new Vector3d(0.4f, 0.2f, 0.1f));
+            world.Add(new Sphere(new Vector3d(-4, 1, 0), 1.0f, material2));
+
+            var material3 = new Metal(new Vector3d(0.7f, 0.6f, 0.5f), 0.0f);
+            world.Add(new Sphere(new Vector3d(4, 1, 0), 1.0f, material3));
+
+            return new HitableList(world.ToArray());
+        }
         static void Main(string[] args)
         {
             // Image
 
-            const double aspect_ratio = 16.0 / 9.0;
+            const double aspect_ratio = 3.0 / 2.0;
             const int image_width = 1200;
             int image_height = (int)(image_width / aspect_ratio);
-            int samples_per_pixel = 100;
+            int samples_per_pixel = 5;
             int max_depth = 50;
 
             // World
-            var material_ground = new Lambertian(new Vector3d(0.8f, 0.8f, 0.0f));
-            var material_center = new Lambertian(new Vector3d(0.1f, 0.2f, 0.5f));
-            var material_left = new Dielectric(1.5f);
-            var material_right = new Metal(new Vector3d(0.8f, 0.6f, 0.2f), 0.0f);
-
-            HitableList world = new HitableList(new Hitable[] {
-                new Sphere(new Vector3d( 0.0f, -100.5f, -1.0f), 100.0f, material_ground),
-                new Sphere(new Vector3d( 0.0f,    0.0f, -1.0f),   0.5f, material_center),
-                new Sphere(new Vector3d(-1.0f,    0.0f, -1.0f),   0.5f, material_left),
-                new Sphere(new Vector3d(-1.0f,    0.0f, -1.0f), -0.45f, material_left),
-                new Sphere(new Vector3d( 1.0f,    0.0f, -1.0f),   0.5f, material_right)
-            });
+            var world = RandomScene();
 
             // Camera
-            var lookFrom = new Vector3d(3, 3, 2);
-            var lookAt = new Vector3d(0, 0, -1);
+            var lookFrom = new Vector3d(13, 2, 3);
+            var lookAt = new Vector3d(0, 0, 0);
             var vup = new Vector3d(0, 1, 0);
-            var dist_to_focus = (lookFrom - lookAt).Magnitude;
+            var dist_to_focus = 10.0f;
+            var aperture = 0.1f;
 
-            var camera = new Camera(lookFrom, lookAt, vup, 20, Convert.ToSingle(aspect_ratio), 2.0f, dist_to_focus);
+            var camera = new Camera(lookFrom, lookAt, vup, 20, Convert.ToSingle(aspect_ratio), aperture, dist_to_focus);
 
             // Render
 
